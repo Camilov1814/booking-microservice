@@ -1,20 +1,20 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { envs } from './config';
-import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>
-  (AppModule, {
-    transport: Transport.TCP,
+  const app = await NestFactory.create(AppModule);
+
+  // Configuración del cliente NATS en el Gateway
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.NATS,
     options: {
-      port:envs.PORT
-    }
+      servers: ['nats://localhost:4222'],
+    },
   });
 
-
-  await app.listen();
-  Logger.log(`Microservice is listening on port ${envs.PORT}`);
+  await app.startAllMicroservices();
+  await app.listen(3000); // Puerto del gateway
 }
+
 bootstrap();
